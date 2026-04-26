@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+:root {
+  --bg-color: #f4f7f6;
+  --primary: #2c3e50;
+  --accent: #3498db;
+  --safe: #2ecc71;
+  --warning: #f1c40f;
+  --danger: #e74c3c;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: #333;
+}
+
+/* Leaflet map full height fix */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
