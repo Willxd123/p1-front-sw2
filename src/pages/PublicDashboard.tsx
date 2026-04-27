@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import SensorMap from '../features/map/SensorMap';
+import { PredictionModal } from '../features/map/PredictionModal';
 import { useTelemetry } from '../hooks/useTelemetry';
 import { sensorService } from '../api/api.service';
-import { AlertTriangle, Activity, Loader2 } from 'lucide-react';
+import { AlertTriangle, Activity, Loader2, Search } from 'lucide-react';
 
 const PublicDashboard = () => {
   const [sensores, setSensores] = useState<any[]>([]);
@@ -11,7 +12,9 @@ const PublicDashboard = () => {
   const [historialLecturas, setHistorialLecturas] = useState<Record<string, any>>({});
   
   const [sensorSeleccionadoId, setSensorSeleccionadoId] = useState<string | null>(null);
-  const [copiado, setCopiado] = useState(false);
+  const [modalPrediccionAbierto, setModalPrediccionAbierto] = useState(false);
+  const [listaMovilAbierta, setListaMovilAbierta] = useState(false);
+  const [filtro, setFiltro] = useState('');
 
   useEffect(() => {
     cargarSensores();
@@ -43,22 +46,29 @@ const PublicDashboard = () => {
 
   const sensorSeleccionado = sensores.find(s => s.id === sensorSeleccionadoId);
 
-  const copiarCoordenadas = () => {
-    if (!sensorSeleccionado) return;
-    const coords = `${Number(sensorSeleccionado.ubicacionLat)}, ${Number(sensorSeleccionado.ubicacionLon)}`;
-    navigator.clipboard.writeText(coords);
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2000);
-  };
+  const sensoresFiltrados = sensores.filter(s => 
+    s.nombreCanal.toLowerCase().includes(filtro.toLowerCase())
+  );
 
   return (
-    <div className="h-full flex flex-col md:flex-row overflow-hidden">
-      {/* Panel Lateral de Información */}
-      <aside className="w-full md:w-80 bg-white border-r border-slate-200 flex flex-col z-10 shadow-sm overflow-hidden">
+    <div className="h-full flex flex-col md:flex-row overflow-hidden relative">
+      {/* Panel Lateral de Información (Desktop) */}
+      <aside className="hidden md:flex w-80 bg-white border-r border-slate-200 flex-col z-10 shadow-sm overflow-hidden">
         <div className="p-5 flex-1 overflow-y-auto">
           <div className="flex items-center gap-2 mb-6">
             <Activity className={`w-5 h-5 ${conectado ? 'text-green-500 animate-pulse' : 'text-slate-300'}`} />
             <h2 className="font-bold text-slate-800 uppercase tracking-wider text-sm">Estado del Sistema</h2>
+          </div>
+
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar canal..."
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
           </div>
 
           {cargando ? (
@@ -67,7 +77,7 @@ const PublicDashboard = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {sensores.map(sensor => (
+              {sensoresFiltrados.map(sensor => (
                 <div 
                   key={sensor.id} 
                   onClick={() => setSensorSeleccionadoId(sensor.id)}
@@ -78,11 +88,10 @@ const PublicDashboard = () => {
                   }`}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-bold text-slate-700 text-sm">{sensor.idUnico}</h3>
+                    <h3 className="font-bold text-slate-700 text-sm">{sensor.nombreCanal}</h3>
                     <span className={`w-2 h-2 rounded-full ${sensor.estadoConexion === 'conectado' ? 'bg-green-500' : 'bg-slate-300'}`}></span>
                   </div>
-                  <p className="text-xs text-slate-500 mb-3">{sensor.nombreCanal}</p>
-                  
+                 
                   <div className="flex items-end justify-between">
                     {(() => {
                       const l = (ultimaLectura?.sensorIdUnico === sensor.idUnico) ? ultimaLectura : historialLecturas[sensor.idUnico];
@@ -125,7 +134,7 @@ const PublicDashboard = () => {
       <section className="flex-1 relative bg-slate-100">
         {/* Banner de Alerta Crítica */}
         {alertLevel === 'PELIGRO' && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[2000] bg-red-600 text-white px-6 py-2 rounded-full shadow-2xl flex items-center gap-3 animate-bounce">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-2000 bg-red-600 text-white px-6 py-2 rounded-full shadow-2xl flex items-center gap-3 animate-bounce">
             <AlertTriangle className="w-5 h-5" />
             <span className="font-bold text-sm">RIESGO DE DESBORDE DETECTADO</span>
           </div>
@@ -140,15 +149,15 @@ const PublicDashboard = () => {
         />
 
         {/* Status de Conexión en el Mapa */}
-        <div className="absolute bottom-6 left-6 z-[1000] bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 flex items-center gap-2 text-xs font-medium">
+        <div className="absolute bottom-6 left-6 z-1000 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 flex items-center gap-2 text-xs font-medium">
           <div className={`w-2 h-2 rounded-full ${conectado ? 'bg-green-500' : 'bg-red-500'}`}></div>
           {conectado ? 'Telemetría en Vivo' : 'Sin conexión'}
         </div>
 
         {/* Tarjeta de Detalles del Sensor */}
         {sensorSeleccionado && (
-          <div className="absolute bottom-6 right-6 z-[1000] max-w-sm w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="rounded-xl overflow-hidden border border-slate-200 shadow-2xl bg-white">
+          <div className="absolute bottom-20 md:bottom-6 left-0 right-0 md:left-auto md:right-6 z-1000 px-4 md:px-0 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="max-w-md mx-auto md:max-w-sm rounded-xl overflow-hidden border border-slate-200 shadow-2xl bg-white">
               <div className={`h-1 w-full ${sensorSeleccionado.estadoConexion === 'conectado' ? 'bg-primario-500' : 'bg-slate-300'}`}></div>
               <div className="px-4 py-4 flex flex-col gap-4">
                 <div className="flex-1 min-w-0">
@@ -168,22 +177,134 @@ const PublicDashboard = () => {
                     {Number(sensorSeleccionado.ubicacionLat).toFixed(8)}, {Number(sensorSeleccionado.ubicacionLon).toFixed(8)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-50">
-                  <button onClick={copiarCoordenadas} className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all ${copiado ? 'bg-green-50 border-green-200 text-green-600' : 'border-slate-200 text-slate-600 hover:border-primario-300 hover:text-primario-600'}`}>
-                    {copiado ? 'Copiado' : 'Coordenadas'}
-                  </button>
-                  <a 
-                    href={`https://www.google.com/maps?q=${Number(sensorSeleccionado.ubicacionLat)},${Number(sensorSeleccionado.ubicacionLon)}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg bg-primario-600 text-white hover:bg-primario-700 transition-all shadow-sm"
-                  >
-                    Google Maps
-                  </a>
+                <div className="flex flex-col gap-2 pt-2 border-t border-slate-50">
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const currentL = (ultimaLectura?.sensorIdUnico === sensorSeleccionado.idUnico) ? ultimaLectura : historialLecturas[sensorSeleccionado.idUnico];
+                      const esRiesgo = currentL?.estadoRiesgo === 'ALERTA' || currentL?.estadoRiesgo === 'PELIGRO';
+                      if (esRiesgo) {
+                        return (
+                          <button 
+                            onClick={() => setModalPrediccionAbierto(true)}
+                            className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-sm"
+                          >
+                            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            Predicción de Desborde
+                          </button>
+                        );
+                      }
+                      return null;
+                    })()}
+                    <a 
+                      href={`https://www.google.com/maps?q=${Number(sensorSeleccionado.ubicacionLat)},${Number(sensorSeleccionado.ubicacionLon)}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg bg-primario-600 text-white hover:bg-primario-700 transition-all shadow-sm"
+                    >
+                      Google Maps
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        )}
+
+        {/* BOTÓN FLOTANTE PARA LISTADO EN MÓVIL */}
+        <div className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-1000">
+          <button 
+            onClick={() => setListaMovilAbierta(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-primario-600 text-white rounded-full font-bold shadow-2xl hover:bg-primario-700 transition-all active:scale-95"
+          >
+            <Activity className="w-4 h-4" />
+            Sensores
+          </button>
+        </div>
+
+        {/* MODAL INTELIGENTE (Lista de Sensores Móvil) */}
+        {listaMovilAbierta && (
+          <div className="md:hidden fixed inset-0 z-4000 bg-slate-900/60 backdrop-blur-sm flex items-end">
+            <div className="w-full bg-white rounded-t-[32px] overflow-hidden animate-in slide-in-from-bottom duration-300 max-h-[85vh] flex flex-col">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primario-50 rounded-lg text-primario-600">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-black text-slate-800 uppercase tracking-widest text-sm">Listado de Canales</h3>
+                </div>
+                <button 
+                  onClick={() => setListaMovilAbierta(false)}
+                  className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold"
+                >✕</button>
+              </div>
+
+              <div className="px-6 py-4 border-b border-slate-50 overflow-hidden shrink-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Filtrar canales..."
+                    value={filtro}
+                    onChange={(e) => setFiltro(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-base focus:outline-none focus:ring-4 focus:ring-primario-500/10 focus:border-primario-500 transition-all"
+                  />
+                </div>
+              </div>
+              
+              <div className="p-6 overflow-y-auto space-y-4">
+                {sensoresFiltrados.map(sensor => (
+                  <div 
+                    key={sensor.id} 
+                    onClick={() => {
+                      setSensorSeleccionadoId(sensor.id);
+                      setListaMovilAbierta(false);
+                    }}
+                    className={`p-5 rounded-2xl border transition-all flex items-center justify-between ${
+                      sensorSeleccionadoId === sensor.id 
+                      ? 'border-primario-500 bg-primario-50 ring-2 ring-primario-200' 
+                      : 'border-slate-100 bg-slate-50 active:bg-white'
+                    }`}
+                  >
+                    <div>
+                      <h4 className="font-black text-slate-800 text-base">{sensor.nombreCanal}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className={`w-2 h-2 rounded-full ${sensor.estadoConexion === 'conectado' ? 'bg-green-500' : 'bg-slate-300'}`}></div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          {sensor.estadoConexion === 'conectado' ? 'En línea' : 'Desconectado'}
+                        </span>
+                      </div>
+                    </div>
+                    {(() => {
+                      const l = (ultimaLectura?.sensorIdUnico === sensor.idUnico) ? ultimaLectura : historialLecturas[sensor.idUnico];
+                      return (
+                        <div className="text-right">
+                          <div className="text-2xl font-black text-slate-900 leading-none">
+                            {l ? Number(l.capacidadPct).toFixed(0) : '0'}<span className="text-xs ml-0.5">%</span>
+                          </div>
+                          {l?.estadoRiesgo && l.estadoRiesgo !== 'NORMAL' && (
+                            <div className={`mt-1 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter ${
+                              l.estadoRiesgo === 'PELIGRO' ? 'bg-red-500 text-white' : 'bg-orange-500 text-white'
+                            }`}>
+                              {l.estadoRiesgo}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL PREDICCIÓN */}
+        {modalPrediccionAbierto && sensorSeleccionado && (
+          <PredictionModal 
+            sensorId={String(sensorSeleccionado.id)}
+            sensorName={sensorSeleccionado.nombreCanal}
+            onClose={() => setModalPrediccionAbierto(false)}
+          />
         )}
       </section>
     </div>
