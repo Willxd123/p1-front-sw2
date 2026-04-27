@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primario-50: var(--color-primario-50);
+  --color-primario-100: var(--color-primario-100);
+  --color-primario-200: var(--color-primario-200);
+  --color-primario-300: var(--color-primario-300);
+  --color-primario-400: var(--color-primario-400);
+  --color-primario-500: var(--color-primario-500);
+  --color-primario-600: var(--color-primario-600);
+  --color-primario-700: var(--color-primario-700);
+  --color-primario-800: var(--color-primario-800);
+  --color-primario-900: var(--color-primario-900);
+  --color-primario-950: var(--color-primario-950);
+  
+  --color-secundario: var(--color-secundario);
+  
+  /* Alias para uso rápido */
+  --color-primario: var(--color-primario-600); 
+}
+
 :root {
   --bg-color: #f4f7f6;
   --primary: #2c3e50;
@@ -7,6 +26,19 @@
   --safe: #2ecc71;
   --warning: #f1c40f;
   --danger: #e74c3c;
+  --color-primario-50:  #f0f4fa;
+  --color-primario-100: #dde8f5;
+  --color-primario-200: #c2d5eb;
+  --color-primario-300: #9abce0;
+  --color-primario-400: #6ca0d1;
+  --color-primario-500: #4982c0;
+  --color-primario-600: #3567a1;
+  --color-primario-700: #2b5282;
+  --color-primario-800: #25466d;
+  --color-primario-900: #1c3766; /* Base */
+  --color-primario-950: #132446;
+
+  --color-secundario:    #BF0704;
 }
 
 body {
