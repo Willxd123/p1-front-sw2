@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import SensorMap from '../features/map/SensorMap';
+import { PredictionModal } from '../features/map/PredictionModal';
 import { useTelemetry } from '../hooks/useTelemetry';
 import { sensorService } from '../api/api.service';
 import { AlertTriangle, Activity, Loader2 } from 'lucide-react';
@@ -11,7 +12,7 @@ const PublicDashboard = () => {
   const [historialLecturas, setHistorialLecturas] = useState<Record<string, any>>({});
   
   const [sensorSeleccionadoId, setSensorSeleccionadoId] = useState<string | null>(null);
-  const [copiado, setCopiado] = useState(false);
+  const [modalPrediccionAbierto, setModalPrediccionAbierto] = useState(false);
 
   useEffect(() => {
     cargarSensores();
@@ -42,14 +43,6 @@ const PublicDashboard = () => {
                      sensores.some(s => s.estadoRiesgo === 'ALERTA') ? 'ALERTA' : 'NORMAL';
 
   const sensorSeleccionado = sensores.find(s => s.id === sensorSeleccionadoId);
-
-  const copiarCoordenadas = () => {
-    if (!sensorSeleccionado) return;
-    const coords = `${Number(sensorSeleccionado.ubicacionLat)}, ${Number(sensorSeleccionado.ubicacionLon)}`;
-    navigator.clipboard.writeText(coords);
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2000);
-  };
 
   return (
     <div className="h-full flex flex-col md:flex-row overflow-hidden">
@@ -168,22 +161,46 @@ const PublicDashboard = () => {
                     {Number(sensorSeleccionado.ubicacionLat).toFixed(8)}, {Number(sensorSeleccionado.ubicacionLon).toFixed(8)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-50">
-                  <button onClick={copiarCoordenadas} className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all ${copiado ? 'bg-green-50 border-green-200 text-green-600' : 'border-slate-200 text-slate-600 hover:border-primario-300 hover:text-primario-600'}`}>
-                    {copiado ? 'Copiado' : 'Coordenadas'}
-                  </button>
-                  <a 
-                    href={`https://www.google.com/maps?q=${Number(sensorSeleccionado.ubicacionLat)},${Number(sensorSeleccionado.ubicacionLon)}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg bg-primario-600 text-white hover:bg-primario-700 transition-all shadow-sm"
-                  >
-                    Google Maps
-                  </a>
+                <div className="flex flex-col gap-2 pt-2 border-t border-slate-50">
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const currentL = (ultimaLectura?.sensorIdUnico === sensorSeleccionado.idUnico) ? ultimaLectura : historialLecturas[sensorSeleccionado.idUnico];
+                      const esRiesgo = currentL?.estadoRiesgo === 'ALERTA' || currentL?.estadoRiesgo === 'PELIGRO';
+                      if (esRiesgo) {
+                        return (
+                          <button 
+                            onClick={() => setModalPrediccionAbierto(true)}
+                            className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-sm"
+                          >
+                            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            Predicción de Desborde
+                          </button>
+                        );
+                      }
+                      return null;
+                    })()}
+                    <a 
+                      href={`https://www.google.com/maps?q=${Number(sensorSeleccionado.ubicacionLat)},${Number(sensorSeleccionado.ubicacionLon)}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg bg-primario-600 text-white hover:bg-primario-700 transition-all shadow-sm"
+                    >
+                      Google Maps
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        )}
+
+        {/* MODAL PREDICCIÓN */}
+        {modalPrediccionAbierto && sensorSeleccionado && (
+          <PredictionModal 
+            sensorId={String(sensorSeleccionado.id)}
+            sensorName={sensorSeleccionado.nombreCanal}
+            onClose={() => setModalPrediccionAbierto(false)}
+          />
         )}
       </section>
     </div>
