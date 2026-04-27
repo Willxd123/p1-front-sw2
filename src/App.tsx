@@ -7,6 +7,7 @@ import AdminDashboard from './features/admin/AdminDashboard';
 import AdminSensores from './features/admin/AdminSensores';
 import AdminLogs from './features/admin/AdminLogs';
 import AdminNotifications from './features/admin/AdminNotifications.tsx';
+import AdminUsers from './features/admin/AdminUsers';
 import './index.css';
 import AdminLayout from './layouts/AdminLayout';
 
@@ -24,6 +25,7 @@ function App() {
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/sensores" element={<AdminSensores />} />
+          <Route path="/admin/usuarios" element={<AdminUsers />} />
           <Route path="/admin/logs" element={<AdminLogs />} />
           <Route path="/admin/notificaciones" element={<AdminNotifications />} />
         </Route>

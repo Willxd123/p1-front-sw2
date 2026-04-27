@@ -3,7 +3,7 @@ import { Droplets, Info } from 'lucide-react';
 
 const PublicLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <header className="bg-slate-900 text-white h-16 flex items-center px-6 shadow-lg z-50">
         <div className="flex items-center gap-2 font-bold text-xl text-blue-400">
           <Droplets className="w-6 h-6" />

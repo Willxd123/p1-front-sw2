@@ -11,11 +11,15 @@ import {
   Filter
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { sensorService } from '../../api/api.service';
 
 const AdminNotifications = () => {
   const [resumen, setResumen] = useState<any>(null);
   const [actividad, setActividad] = useState<any[]>([]);
   const [cobertura, setCobertura] = useState<any[]>([]);
+  const [suscriptores, setSuscriptores] = useState<any[]>([]);
+  const [sensores, setSensores] = useState<any[]>([]);
+  const [filtroSensor, setFiltroSensor] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,14 +29,18 @@ const AdminNotifications = () => {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      const [resResp, actResp, cobResp] = await Promise.all([
+      const [resResp, actResp, cobResp, senResp, susResp] = await Promise.all([
         notificationService.obtenerResumen(),
         notificationService.obtenerActividad(),
-        notificationService.obtenerCobertura(1, 10)
+        notificationService.obtenerCobertura(1, 10, filtroSensor),
+        sensorService.listarTodos(),
+        notificationService.obtenerListadoSuscriptores()
       ]);
       setResumen(resResp.data);
       setActividad(actResp.data);
       setCobertura(cobResp.data.data);
+      setSensores(senResp.data);
+      setSuscriptores(susResp.data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -40,21 +48,34 @@ const AdminNotifications = () => {
     }
   };
 
+  useEffect(() => {
+    if (!loading) {
+      refrescarCobertura();
+    }
+  }, [filtroSensor]);
+
+  const refrescarCobertura = async () => {
+    try {
+      const resp = await notificationService.obtenerCobertura(1, 10, filtroSensor);
+      setCobertura(resp.data.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleExportInactivos = async () => {
     try {
-      const resp = await notificationService.obtenerInactivos(30);
-      const csvContent = "data:text/csv;charset=utf-8," 
-        + "ID,FCM_TOKEN,FECHA_SUSCRIPCION\n"
-        + resp.data.map((d: any) => `${d.id},${d.fcmToken},${d.fechaSuscripcion}`).join("\n");
-      
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "dispositivos_inactivos.csv");
+      const { data } = await notificationService.descargarReporteInactivos(30);
+      const blob = new Blob([data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `dispositivos_inactivos_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
+      link.remove();
     } catch (e) {
-      alert('Error al exportar datos');
+      alert('Error al exportar datos del servidor');
     }
   };
 
@@ -162,8 +183,17 @@ const AdminNotifications = () => {
             <h3 className="font-black text-slate-800 flex items-center gap-2">
               <Filter className="text-purple-500 w-5 h-5" /> Auditoría de Cobertura
             </h3>
-            <div className="flex gap-2">
-               <button className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 transition-all"><Filter className="w-4 h-4" /></button>
+            <div className="flex gap-4">
+               <select 
+                value={filtroSensor}
+                onChange={(e) => setFiltroSensor(e.target.value)}
+                className="text-xs font-bold bg-slate-50 border-none rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+               >
+                 <option value="">TODOS LOS SENSORES</option>
+                 {sensores.map(s => (
+                   <option key={s.id} value={s.id}>{s.nombreCanal.toUpperCase()}</option>
+                 ))}
+               </select>
             </div>
           </div>
 
@@ -220,6 +250,68 @@ const AdminNotifications = () => {
               Ver Más <ArrowRight className="w-3 h-3" />
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Suscriptores en Vivo */}
+      <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm mt-8">
+        <h3 className="font-black text-slate-800 flex items-center gap-2 mb-6">
+          <Smartphone className="text-green-500 w-5 h-5" /> Suscriptores en Vivo (Última Ubicación)
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-slate-50">
+                <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">ID Dispositivo</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Última Conexión</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Coordenadas</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Mapa</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {suscriptores.length > 0 ? suscriptores.map((s) => (
+                <tr key={s.id} className="group hover:bg-slate-50 transition-all">
+                  <td className="py-4">
+                    <span className="text-xs font-bold text-slate-700 font-mono">...{s.id.slice(-12)}</span>
+                  </td>
+                  <td className="py-4">
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                      s.gps?.timestampGps ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      {s.gps?.timestampGps ? 'CONECTADO' : 'SIN GPS'}
+                    </span>
+                  </td>
+                  <td className="py-4">
+                    <span className="text-xs font-medium text-slate-500">
+                      {s.gps?.timestampGps ? new Date(s.gps.timestampGps).toLocaleString() : 'N/A'}
+                    </span>
+                  </td>
+                  <td className="py-4">
+                    <span className="text-xs font-bold text-slate-600">
+                      {s.gps ? `${s.gps.ubicacionLat}, ${s.gps.ubicacionLon}` : 'Pendiente'}
+                    </span>
+                  </td>
+                  <td className="py-4 text-right">
+                    {s.gps && (
+                      <a 
+                        href={`https://www.google.com/maps?q=${s.gps.ubicacionLat},${s.gps.ubicacionLon}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2 hover:bg-blue-50 rounded-lg text-blue-500 transition-all inline-block"
+                      >
+                        <ArrowRight className="w-4 h-4" />
+                      </a>
+                    )}
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-slate-300 text-sm italic">No hay suscriptores activos para mostrar</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
