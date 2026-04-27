@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:3000/telemetria';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000/telemetria';
 
 export interface LecturaTiempoReal {
   /** idUnico del sensor (e.g. "ESP32_ANILLO3_CALLE5") — normalizado en el hook */
@@ -35,7 +35,11 @@ export const useTelemetry = () => {
   const [conectado, setConectado] = useState(false);
 
   useEffect(() => {
-    const newSocket = io(SOCKET_URL);
+    const newSocket = io(SOCKET_URL, {
+      extraHeaders: {
+        'ngrok-skip-browser-warning': 'true'
+      }
+    });
 
     newSocket.on('connect', () => {
       setConectado(true);
@@ -58,5 +62,5 @@ export const useTelemetry = () => {
     };
   }, []);
 
-  return { conectado, ultimaLectura };
+  return { socket, conectado, ultimaLectura };
 };

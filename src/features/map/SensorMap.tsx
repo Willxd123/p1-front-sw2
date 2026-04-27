@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
-import L, { LatLngExpression } from 'leaflet';
+import L from 'leaflet';
+import type { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // 1. SOLUCIÓN VITE: Exponer L globalmente antes de importar el plugin
@@ -50,7 +51,6 @@ function buildHeatPoints(sensors: Sensor[], sensorStatus: Record<string, any>) {
     if (isNaN(lat) || isNaN(lon) || lat === 0 || lon === 0) return;
 
     const live = sensorStatus[s.idUnico];
-    const riesgo = String(live?.estadoRiesgo ?? 'NORMAL').toUpperCase();
 
     // Usar la capacidad porcentual (0-100) mapeada a 0.0-1.0 para intensidad
     let intensity = live ? Number(live.capacidadPct) / 100 : 0;

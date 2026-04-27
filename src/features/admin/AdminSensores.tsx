@@ -9,9 +9,7 @@ import {
   Settings2,
   Save,
   MapPin,
-  Info,
   Calendar,
-  Key,
   Database,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -219,7 +217,7 @@ const AdminSensores = () => {
       {/* MODAL DETALLES */}
       <AnimatePresence>
         {modalDetalleAbierto && sensorSeleccionado && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-[2px]">
+          <div className="fixed inset-0 z-110 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-[2px]">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -323,7 +321,7 @@ const AdminSensores = () => {
       {/* MODAL CREACIÓN / EDICIÓN */}
       <AnimatePresence>
         {(modalAbierto || modalEdicionAbierto) && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
             <motion.form
               initial={{ opacity: 0, translateY: 20 }}
               animate={{ opacity: 1, translateY: 0 }}
