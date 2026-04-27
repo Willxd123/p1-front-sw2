@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
-  Settings, 
   Database, 
   LogOut, 
   Radio, 

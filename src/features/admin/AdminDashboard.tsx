@@ -4,10 +4,10 @@ import { useTelemetry } from '../../hooks/useTelemetry';
 import SensorMap from '../map/SensorMap';
 import { 
   Zap, 
-  Droplet, 
+
   Activity, 
   AlertCircle, 
-  Power,
+ 
   RefreshCw,
   Map as MapIcon
 } from 'lucide-react';
@@ -15,7 +15,6 @@ import { motion } from 'framer-motion';
 
 const AdminDashboard = () => {
   const [sensores, setSensores] = useState<any[]>([]);
-  const [bombaActiva, setBombaActiva] = useState(false);
   const { conectado, ultimaLectura } = useTelemetry();
   const [historialReciente, setHistorialReciente] = useState<Record<string, any>>({});
   const [selectedSensorId, setSelectedSensorId] = useState<string | null>(null);
@@ -52,14 +51,7 @@ const AdminDashboard = () => {
     setSelectedSensorId(String(sensor.id));
   };
 
-  const handleControlBomba = async (accion: 'on' | 'off') => {
-    try {
-      await sensorService.controlBomba(accion);
-      setBombaActiva(accion === 'on');
-    } catch (e) {
-      alert('Error al controlar la bomba');
-    }
-  };
+
 
   return (
     <div className="space-y-8">
@@ -105,7 +97,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Mapa de Riesgo */}
           <div className="lg:col-span-8 h-[500px] rounded-3xl overflow-hidden border border-slate-100 shadow-inner relative">
-            <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2 pointer-events-none">
+            <div className="absolute top-4 left-4 z-1000 bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2 pointer-events-none">
               <MapIcon className="w-3.5 h-3.5 text-blue-500" />
               <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Mapa de Riesgo Calorimétrico</span>
             </div>
