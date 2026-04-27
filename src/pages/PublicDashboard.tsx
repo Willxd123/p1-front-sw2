@@ -211,7 +211,7 @@ const PublicDashboard = () => {
         )}
 
         {/* BOTÓN FLOTANTE PARA LISTADO EN MÓVIL */}
-        <div className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-1000">
+        <div className="md:hidden absolute bottom-10 left-1/2 -translate-x-1/2 z-1000">
           <button 
             onClick={() => setListaMovilAbierta(true)}
             className="flex items-center gap-2 px-6 py-3 bg-primario-600 text-white rounded-full font-bold shadow-2xl hover:bg-primario-700 transition-all active:scale-95"
