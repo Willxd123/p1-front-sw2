@@ -6,7 +6,6 @@ import {
   CheckCircle, 
   Clock, 
   Smartphone, 
-  Download,
   ArrowRight,
   Filter
 } from 'lucide-react';
