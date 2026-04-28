@@ -63,21 +63,6 @@ const AdminNotifications = () => {
     }
   };
 
-  const handleExportInactivos = async () => {
-    try {
-      const { data } = await notificationService.descargarReporteInactivos(30);
-      const blob = new Blob([data], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `dispositivos_inactivos_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (e) {
-      alert('Error al exportar datos del servidor');
-    }
-  };
 
   if (loading) {
     return (
@@ -96,12 +81,6 @@ const AdminNotifications = () => {
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">Gestión de Suscriptores</h2>
           <p className="text-slate-500 font-medium mt-1">Monitoreo de cobertura y salud de la red de dispositivos.</p>
         </div>
-        <button 
-          onClick={handleExportInactivos}
-          className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm active:scale-95"
-        >
-          <Download className="w-4 h-4" /> Exportar Inactivos (30d)
-        </button>
       </div>
 
       {/* KPI Grid */}
